@@ -1,6 +1,7 @@
 require("dotenv").config();
 const http = require("http");
 const AppDataSource = require("./db");
+const errhandle = require("./errHandler");
 
 function isUndefined(value) {
   return value === undefined;
@@ -41,14 +42,8 @@ const requestListener = async (req, res) => {
       );
       res.end();
     } catch (error) {
-      res.writeHead(500, headers);
-      res.write(
-        JSON.stringify({
-          status: "error",
-          message: "伺服器錯誤",
-        })
-      );
-      res.end();
+      console.log(error);
+      errhandle(res, 500, "error", "伺服器錯誤");
     }
   } else if (req.url === "/api/credit-package" && req.method === "POST") {
     req.on("end", async () => {
@@ -62,14 +57,7 @@ const requestListener = async (req, res) => {
           isUndefined(data.price) ||
           isNotValidInteger(data.price)
         ) {
-          res.writeHead(400, headers);
-          res.write(
-            JSON.stringify({
-              status: "failed",
-              message: "欄位未填寫正確",
-            })
-          );
-          res.end();
+          errhandle(res, 400, "failed", "欄位未填寫正確");
           return;
         }
         const creditPackageRepo = await AppDataSource.getRepository(
@@ -81,14 +69,7 @@ const requestListener = async (req, res) => {
           },
         });
         if (existPackage.length > 0) {
-          res.writeHead(409, headers);
-          res.write(
-            JSON.stringify({
-              status: "failed",
-              message: "資料重複",
-            })
-          );
-          res.end();
+          errhandle(res, 409, "failed", "資料重複");
           return;
         }
         const newPackage = await creditPackageRepo.create({
@@ -107,14 +88,7 @@ const requestListener = async (req, res) => {
         res.end();
       } catch (error) {
         console.error(error);
-        res.writeHead(500, headers);
-        res.write(
-          JSON.stringify({
-            status: "error",
-            message: "伺服器錯誤",
-          })
-        );
-        res.end();
+        errhandle(res, 500, "error", "伺服器錯誤");
       }
     });
   } else if (
@@ -124,28 +98,14 @@ const requestListener = async (req, res) => {
     try {
       const packageId = req.url.split("/").pop();
       if (isUndefined(packageId) || isNotValidSting(packageId)) {
-        res.writeHead(400, headers);
-        res.write(
-          JSON.stringify({
-            status: "failed",
-            message: "ID錯誤",
-          })
-        );
-        res.end();
+        errhandle(res, 400, "failed", "ID錯誤");
         return;
       }
       const result = await AppDataSource.getRepository("CreditPackage").delete(
         packageId
       );
       if (result.affected === 0) {
-        res.writeHead(400, headers);
-        res.write(
-          JSON.stringify({
-            status: "failed",
-            message: "ID錯誤",
-          })
-        );
-        res.end();
+        errhandle(res, 400, "failed", "ID錯誤");
         return;
       }
       res.writeHead(200, headers);
@@ -181,28 +141,14 @@ const requestListener = async (req, res) => {
       res.end();
     } catch (error) {
       console.log(error);
-      res.writeHead(500, headers);
-      res.write(
-        JSON.stringify({
-          status: "error",
-          message: "伺服器錯誤",
-        })
-      );
-      res.end();
+      errhandle(res, 500, "error", "伺服器錯誤");
     }
   } else if (req.url === "/api/coaches/skill" && req.method === "POST") {
     req.on("end", async () => {
       try {
         const data = JSON.parse(body);
         if (isUndefined(data.name) || isNotValidSting(data.name)) {
-          res.writeHead(400, headers);
-          res.write(
-            JSON.stringify({
-              status: "failed",
-              message: "欄位未填寫正確",
-            })
-          );
-          res.end();
+          errhandle(res, 400, "failed", "欄位未填寫正確");
           return;
         }
         const skillRepo = await AppDataSource.getRepository("Skill");
@@ -212,14 +158,7 @@ const requestListener = async (req, res) => {
           },
         });
         if (existSkill.length > 0) {
-          res.writeHead(409, headers);
-          res.write(
-            JSON.stringify({
-              status: "failed",
-              message: "資料重複",
-            })
-          );
-          res.end();
+          errhandle(res, 400, "failed", "欄位未填寫正確");
           return;
         }
         const newSkill = await skillRepo.create({
@@ -235,15 +174,8 @@ const requestListener = async (req, res) => {
         );
         res.end();
       } catch (error) {
-        console.error(error);
-        res.writeHead(500, headers);
-        res.write(
-          JSON.stringify({
-            status: "error",
-            message: "伺服器錯誤",
-          })
-        );
-        res.end();
+        console.error("有錯誤了！！！！", error);
+        errhandle(res, 500, "error", "伺服器錯誤");
       }
     });
   } else if (
@@ -253,26 +185,12 @@ const requestListener = async (req, res) => {
     try {
       const skillId = req.url.split("/").pop();
       if (isUndefined(skillId) || isNotValidSting(skillId)) {
-        res.writeHead(400, headers);
-        res.write(
-          JSON.stringify({
-            status: "failed",
-            message: "ID錯誤",
-          })
-        );
-        res.end();
+        errhandle(res, 400, "failed", "ID錯誤");
         return;
       }
       const result = await AppDataSource.getRepository("Skill").delete(skillId);
       if (result.affected === 0) {
-        res.writeHead(400, headers);
-        res.write(
-          JSON.stringify({
-            status: "failed",
-            message: "ID錯誤",
-          })
-        );
-        res.end();
+        errhandle(res, 400, "failed", "ID錯誤");
         return;
       }
       res.writeHead(200, headers);
