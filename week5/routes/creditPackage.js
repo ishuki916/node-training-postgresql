@@ -17,7 +17,6 @@ router.get("/", async (req, res, next) => {
     });
     successHandler(res, 200, "success", packages);
   } catch (error) {
-    console.log(error);
     errHandler(res, 500, "error", "伺服器錯誤");
   }
 });
@@ -54,7 +53,6 @@ router.post("/", async (req, res, next) => {
     const result = await creditPackageRepo.save(newPackage);
     successHandler(res, 201, "success", result);
   } catch (error) {
-    console.error(error);
     errHandler(res, 500, "error", "伺服器錯誤");
   }
 });
@@ -77,7 +75,6 @@ router.delete("/:creditPackageId", async (req, res, next) => {
     }
     successHandler(res, 200, "success", null);
   } catch (error) {
-    console.error(error);
     errHandler(res, 500, "error", "伺服器錯誤");
   }
 });
