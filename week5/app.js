@@ -8,6 +8,7 @@ const creditPackageRouter = require("./routes/creditPackage");
 const skillRouter = require("./routes/skill");
 const userRouter = require("./routes/user");
 const adminRouter = require("./routes/admin");
+const { errHandler } = require("./utils/resHandler");
 
 const app = express();
 app.use(cors());
@@ -32,16 +33,16 @@ app.get("/healthcheck", (req, res) => {
 });
 app.use("/api/credit-package", creditPackageRouter);
 app.use("/api/skill", skillRouter);
-app.use("/api/user", userRouter);
+app.use("/api/users", userRouter);
 app.use("/api/admin", adminRouter);
+app.use("/*", (req, res) => {
+  errHandler(res, 404, "failed", "找不到路徑");
+});
 
 // eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
   req.log.error(err);
-  res.status(500).json({
-    status: "error",
-    message: "伺服器錯誤",
-  });
+  errHandler(res, 500, "error", "伺服器錯誤");
 });
 
 module.exports = app;
