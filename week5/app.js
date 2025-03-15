@@ -8,6 +8,7 @@ const creditPackageRouter = require("./routes/creditPackage");
 const skillRouter = require("./routes/skill");
 const userRouter = require("./routes/user");
 const adminRouter = require("./routes/admin");
+const coursesRouter = require("./routes/courses");
 const { errHandler } = require("./utils/resHandler");
 
 const app = express();
@@ -35,6 +36,7 @@ app.use("/api/credit-package", creditPackageRouter);
 app.use("/api/skill", skillRouter);
 app.use("/api/users", userRouter);
 app.use("/api/admin", adminRouter);
+app.use("/api/courses", coursesRouter);
 app.use("/*", (req, res) => {
   errHandler(res, 404, "failed", "找不到路徑");
 });

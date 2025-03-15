@@ -146,7 +146,7 @@ router.get("/profile", auth, async (req, res, next) => {
     const { id } = req.user;
     const userRepository = dataSource.getRepository("User");
     const user = await userRepository.findOne({
-      select: ["name", "email"],
+      select: ["id", "name", "email"],
       where: { id },
     });
     successHandler(res, 200, "success", {

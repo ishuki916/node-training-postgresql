@@ -4,6 +4,7 @@ const { IsNull } = require("typeorm");
 const router = express.Router();
 const config = require("../config/index");
 const { dataSource } = require("../db/data-source");
+const { successHandler, errHandler } = require("../utils/resHandler");
 const logger = require("../utils/logger")("Course");
 const auth = require("../middlewares/auth")({
   secret: config.get("secret").jwtSecret,
@@ -21,21 +22,23 @@ router.get("/", async (req, res, next) => {
         start_at: true,
         end_at: true,
         max_participants: true,
-        User: {
+        user: {
           name: true,
         },
-        Skill: {
+        skill: {
           name: true,
         },
       },
       relations: {
-        User: true,
-        Skill: true,
+        user: true,
+        skill: true,
       },
     });
-    res.status(200).json({
-      status: "success",
-      data: courses.map((course) => {
+    successHandler(
+      res,
+      200,
+      "success",
+      courses.map((course) => {
         return {
           id: course.id,
           name: course.name,
@@ -43,11 +46,11 @@ router.get("/", async (req, res, next) => {
           start_at: course.start_at,
           end_at: course.end_at,
           max_participants: course.max_participants,
-          coach_name: course.User.name,
-          skill_name: course.Skill.name,
+          coach_name: course.user.name,
+          skill_name: course.skill.name,
         };
-      }),
-    });
+      })
+    );
   } catch (error) {
     logger.error(error);
     next(error);
@@ -65,10 +68,7 @@ router.post("/:courseId", auth, async (req, res, next) => {
       },
     });
     if (!course) {
-      res.status(400).json({
-        status: "failed",
-        message: "ID錯誤",
-      });
+      errHandler(res, 400, "failed", "ID錯誤");
       return;
     }
     const creditPurchaseRepo = dataSource.getRepository("CreditPurchase");
@@ -80,10 +80,7 @@ router.post("/:courseId", auth, async (req, res, next) => {
       },
     });
     if (userCourseBooking) {
-      res.status(400).json({
-        status: "failed",
-        message: "已經報名過此課程",
-      });
+      errHandler(res, 400, "failed", "已經報名過此課程");
       return;
     }
     const userCredit = await creditPurchaseRepo.sum("purchased_credits", {
@@ -102,16 +99,10 @@ router.post("/:courseId", auth, async (req, res, next) => {
       },
     });
     if (userUsedCredit >= userCredit) {
-      res.status(400).json({
-        status: "failed",
-        message: "已無可使用堂數",
-      });
+      errHandler(res, 400, "failed", "已無可使用堂數");
       return;
     } else if (courseBookingCount >= course.max_participants) {
-      res.status(400).json({
-        status: "failed",
-        message: "已達最大參加人數，無法參加",
-      });
+      errHandler(res, 400, "failed", "已達最大參加人數，無法參加");
       return;
     }
     const newCourseBooking = await courseBookingRepo.create({
@@ -119,10 +110,7 @@ router.post("/:courseId", auth, async (req, res, next) => {
       course_id: courseId,
     });
     await courseBookingRepo.save(newCourseBooking);
-    res.status(201).json({
-      status: "success",
-      data: null,
-    });
+    successHandler(res, 201, "success", null);
   } catch (error) {
     logger.error(error);
     next(error);
@@ -142,10 +130,7 @@ router.delete("/:courseId", auth, async (req, res, next) => {
       },
     });
     if (!userCourseBooking) {
-      res.status(400).json({
-        status: "failed",
-        message: "ID錯誤",
-      });
+      errHandler(res, 400, "failed", "ID錯誤");
       return;
     }
     const updateResult = await courseBookingRepo.update(
@@ -159,16 +144,10 @@ router.delete("/:courseId", auth, async (req, res, next) => {
       }
     );
     if (updateResult.affected === 0) {
-      res.status(400).json({
-        status: "failed",
-        message: "取消失敗",
-      });
+      errHandler(res, 400, "failed", "取消失敗");
       return;
     }
-    res.status(200).json({
-      status: "success",
-      data: null,
-    });
+    successHandler(res, 200, "success", null);
   } catch (error) {
     logger.error(error);
     next(error);

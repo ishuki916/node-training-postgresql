@@ -9,28 +9,19 @@ const auth = require("../middlewares/auth")({
   userRepository: dataSource.getRepository("User"),
   logger,
 });
-
-function isUndefined(value) {
-  return value === undefined;
-}
-
-function isNotValidSting(value) {
-  return typeof value !== "string" || value.trim().length === 0 || value === "";
-}
-
-function isNotValidInteger(value) {
-  return typeof value !== "number" || value < 0 || value % 1 !== 0;
-}
+const {
+  isUndefined,
+  isNotValidSting,
+  isNotValidInteger,
+} = require("../utils/validator");
+const { errHandler, successHandler } = require("../utils/resHandler");
 
 router.get("/", async (req, res, next) => {
   try {
     const creditPackage = await dataSource.getRepository("CreditPackage").find({
       select: ["id", "name", "credit_amount", "price"],
     });
-    res.status(200).json({
-      status: "success",
-      data: creditPackage,
-    });
+    successHandler(res, 200, "success", creditPackage);
   } catch (error) {
     logger.error(error);
     next(error);
@@ -48,10 +39,7 @@ router.post("/", async (req, res, next) => {
       isUndefined(price) ||
       isNotValidInteger(price)
     ) {
-      res.status(400).json({
-        status: "failed",
-        message: "欄位未填寫正確",
-      });
+      errHandler(res, 400, "failed", "欄位未填寫正確");
       return;
     }
     const creditPackageRepo = dataSource.getRepository("CreditPackage");
@@ -61,10 +49,7 @@ router.post("/", async (req, res, next) => {
       },
     });
     if (existCreditPackage.length > 0) {
-      res.status(409).json({
-        status: "failed",
-        message: "資料重複",
-      });
+      errHandler(res, 409, "failed", "資料重複");
       return;
     }
     const newCreditPurchase = await creditPackageRepo.create({
@@ -73,10 +58,7 @@ router.post("/", async (req, res, next) => {
       price,
     });
     const result = await creditPackageRepo.save(newCreditPurchase);
-    res.status(200).json({
-      status: "success",
-      data: result,
-    });
+    successHandler(res, 200, "success", result);
   } catch (error) {
     logger.error(error);
     next(error);
@@ -94,10 +76,7 @@ router.post("/:creditPackageId", auth, async (req, res, next) => {
       },
     });
     if (!creditPackage) {
-      res.status(400).json({
-        status: "failed",
-        message: "ID錯誤",
-      });
+      errHandler(res, 400, "failed", "ID錯誤");
       return;
     }
     const creditPurchaseRepo = dataSource.getRepository("CreditPurchase");
@@ -109,10 +88,7 @@ router.post("/:creditPackageId", auth, async (req, res, next) => {
       purchaseAt: new Date().toISOString(),
     });
     await creditPurchaseRepo.save(newPurchase);
-    res.status(200).json({
-      status: "success",
-      data: null,
-    });
+    successHandler(res, 200, "success", null);
   } catch (error) {
     logger.error(error);
     next(error);
@@ -123,26 +99,17 @@ router.delete("/:creditPackageId", async (req, res, next) => {
   try {
     const { creditPackageId } = req.params;
     if (isUndefined(creditPackageId) || isNotValidSting(creditPackageId)) {
-      res.status(400).json({
-        status: "failed",
-        message: "欄位未填寫正確",
-      });
+      errHandler(res, 400, "failed", "欄位未填寫正確");
       return;
     }
     const result = await dataSource
       .getRepository("CreditPackage")
       .delete(creditPackageId);
     if (result.affected === 0) {
-      res.status(400).json({
-        status: "failed",
-        message: "ID錯誤",
-      });
+      errHandler(res, 400, "failed", "ID錯誤");
       return;
     }
-    res.status(200).json({
-      status: "success",
-      data: result,
-    });
+    successHandler(res, 200, "success", result);
   } catch (error) {
     logger.error(error);
     next(error);
