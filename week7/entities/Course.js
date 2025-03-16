@@ -9,6 +9,14 @@ module.exports = new EntitySchema({
       type: "uuid",
       generated: "uuid",
     },
+    user_id: {
+      type: "uuid",
+      nullable: false,
+    },
+    skill_id: {
+      type: "uuid",
+      nullable: false,
+    },
     name: {
       type: "varchar",
       length: 100,
@@ -47,17 +55,23 @@ module.exports = new EntitySchema({
     },
   },
   relations: {
-    user: {
-      type: "many-to-one",
+    User: {
       target: "User",
-      joinColumn: { name: "user_id" },
-      onDelete: "CASCADE",
-    },
-    skill: {
       type: "many-to-one",
+      joinColumn: {
+        name: "user_id",
+        referencedColumnName: "id",
+        foreignKeyConstraintName: "courses_user_id_fk",
+      },
+    },
+    Skill: {
       target: "Skill",
-      joinColumn: { name: "skill_id" },
-      onDelete: "CASCADE",
+      type: "many-to-one",
+      joinColumn: {
+        name: "skill_id",
+        referencedColumnName: "id",
+        foreignKeyConstraintName: "courses_skill_id_fk",
+      },
     },
   },
 });
